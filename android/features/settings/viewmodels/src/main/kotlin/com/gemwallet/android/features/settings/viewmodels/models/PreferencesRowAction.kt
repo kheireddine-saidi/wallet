@@ -36,10 +36,11 @@ fun GemListRow.preferencesAction(): PreferencesRowAction? = when (action()) {
     GemRowAction.Contacts -> PreferencesRowAction.Open(PreferencesAction.Contacts)
     GemRowAction.Language -> PreferencesRowAction.Language
     GemRowAction.Appearance -> PreferencesRowAction.Appearance
-    GemRowAction.Perpetuals -> (this as? GemListRow.Toggle)?.let { PreferencesRowAction.Perpetuals(it.isOn) }
-    GemRowAction.PerpetualLeverage -> PreferencesRowAction.Option(PerpetualSetting.Leverage)
-    GemRowAction.PerpetualMarginType -> PreferencesRowAction.Option(PerpetualSetting.MarginType)
-    GemRowAction.PerpetualTakeProfit -> PreferencesRowAction.Option(PerpetualSetting.TakeProfit)
-    GemRowAction.PerpetualStopLoss -> PreferencesRowAction.Option(PerpetualSetting.StopLoss)
+    // NOTE: Perpetuals are disabled.
+    GemRowAction.Perpetuals -> null
+    GemRowAction.PerpetualLeverage -> null
+    GemRowAction.PerpetualMarginType -> null
+    GemRowAction.PerpetualTakeProfit -> null
+    GemRowAction.PerpetualStopLoss -> null
     else -> null
 }

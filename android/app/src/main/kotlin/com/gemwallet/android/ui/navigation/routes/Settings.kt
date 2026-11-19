@@ -29,7 +29,6 @@ import com.gemwallet.android.features.settings.presents.developer.DeveloperPayme
 import com.gemwallet.android.features.settings.presents.developer.DeveloperScreen
 import com.gemwallet.android.features.settings.presents.security.SecurityScreen
 import com.gemwallet.android.features.settings.viewmodels.models.PreferencesAction
-import com.gemwallet.android.features.support.presents.SupportChatScreen
 import com.gemwallet.android.ui.models.navigation.RouteArgument
 import com.gemwallet.android.ui.navigation.WalletNavigator
 import com.gemwallet.android.ui.navigation.assetIdArgument
@@ -81,9 +80,6 @@ data class AssetPriceAlertsRoute(val assetId: AssetId) : NavKey
 
 @Serializable
 data class SetPriceAlertRoute(val assetId: AssetId) : NavKey
-
-@Serializable
-data object SupportRoute : NavKey
 
 @Serializable
 data object PreferencesRoute : NavKey
@@ -227,27 +223,5 @@ fun EntryProviderScope<NavKey>.settingsScreen(navigator: WalletNavigator, onPaym
                 }
             },
         )
-    }
-
-    entry<SupportRoute> { key ->
-        val context = LocalContext.current
-        val defaultUriHandler = LocalUriHandler.current
-        val currentOnOpenUrl by rememberUpdatedState(navigator::openNotificationUrl)
-        val uriHandler = remember(defaultUriHandler, context) {
-            object : UriHandler {
-                override fun openUri(uri: String) {
-                    if (!currentOnOpenUrl(uri)) {
-                        defaultUriHandler.open(context, uri)
-                    }
-                }
-            }
-        }
-        CompositionLocalProvider(LocalUriHandler provides uriHandler) {
-            SupportChatScreen(
-                message = navigator.routeMessage(key),
-                onMessageShown = { navigator.clearRouteMessage(key) },
-                onCancel = onCancel,
-            )
-        }
     }
 }

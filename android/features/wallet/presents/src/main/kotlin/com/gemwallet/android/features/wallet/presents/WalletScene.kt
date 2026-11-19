@@ -34,7 +34,6 @@ import com.gemwallet.android.domains.asset.aggregates.AssetInfoDataAggregate
 import com.gemwallet.android.features.assets.presents.banner.Banner
 import com.gemwallet.android.features.nft.presents.CollectionsPreviewAction
 import com.gemwallet.android.features.nft.presents.CollectionsPreviewSection
-import com.gemwallet.android.features.perpetuals.presents.PerpetualsPreviewSection
 import com.gemwallet.android.features.wallet.presents.components.AssetsListFooter
 import com.gemwallet.android.features.wallet.presents.components.WalletHeader
 import com.gemwallet.android.features.wallet.presents.components.assets
@@ -161,6 +160,7 @@ internal fun WalletScene(
                         }
                     }
                 }
+                /* NOTE: Perpetuals feature is disabled.
                 if (homeState?.showsPerpetuals == true) {
                     item(key = PerpetualsSectionItemKey) {
                         PerpetualsPreviewSection(
@@ -169,6 +169,7 @@ internal fun WalletScene(
                         )
                     }
                 }
+                */
                 assets(
                     items = pinnedAssets,
                     longPressState = longPressedAsset,

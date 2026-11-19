@@ -20,7 +20,6 @@ dependencies {
     implementation(project(":ui"))
     implementation(project(":features:qr_scanner:presents"))
     implementation(project(":features:transfer:viewmodels"))
-    implementation(project(":features:stake:presents"))
 
     implementation(libs.hilt.lifecycle.viewmodel.compose)
     implementation(libs.zxing.core)

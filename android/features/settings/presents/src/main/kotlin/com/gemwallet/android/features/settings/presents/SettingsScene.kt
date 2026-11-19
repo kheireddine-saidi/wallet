@@ -23,6 +23,7 @@ import com.gemwallet.android.ui.models.ListPosition
 import com.gemwallet.android.ui.models.actions.SettingsAction
 import com.gemwallet.android.ui.theme.space0
 import uniffi.gemstone.GemGroup
+import uniffi.gemstone.GemListRow
 
 @Composable
 fun SettingsScene(sections: List<GemGroup>, onAction: (SettingsAction) -> Unit, scrollState: ScrollState) {
@@ -36,11 +37,20 @@ fun SettingsScene(sections: List<GemGroup>, onAction: (SettingsAction) -> Unit, 
                 .verticalScroll(scrollState),
         ) {
             sections.forEach { section ->
-                section.rows.forEachIndexed { index, row ->
+                // NOTE: Rewards and Perpetuals are disabled, so filter out rows with null actions.
+                val rows = section.rows
+                val visibleRows = mutableListOf<GemListRow>()
+                for (i in 0 until rows.size) {
+                    val row = rows[i]
+                    if (row.settingsAction() != null) {
+                        visibleRows.add(row)
+                    }
+                }
+                visibleRows.forEachIndexed { index, row ->
                     val action = row.settingsAction()
                     GemListRowView(
                         row = row,
-                        listPosition = ListPosition.getPosition(index, section.rows.size),
+                        listPosition = ListPosition.getPosition(index, visibleRows.size),
                         modifier = Modifier.clickable { action?.let(onAction) },
                     )
                 }

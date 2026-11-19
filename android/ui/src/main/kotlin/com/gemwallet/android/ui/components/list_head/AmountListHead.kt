@@ -218,13 +218,21 @@ fun HeaderIcon(icon: GemAssetIcon, iconSize: Dp = headerIconSize) {
 @Composable
 fun AssetHeadActions(actions: GemHeaderActions, onAction: (GemHeaderButtonAction) -> Unit) {
     var actionFontSize by remember { mutableStateOf(16.sp) }
-    val buttons = when (actions) {
+    val buttons = mutableListOf<GemHeaderButton>()
+    when (actions) {
         GemHeaderActions.WatchOnly -> {
             AssetWatchOnly()
             return
         }
 
-        is GemHeaderActions.Buttons -> actions.buttons
+        is GemHeaderActions.Buttons -> {
+            for (i in 0 until actions.buttons.size) {
+                val button = actions.buttons[i]
+                if (button.action !is GemHeaderButtonAction.Buy && button.action !is GemHeaderButtonAction.Swap) {
+                    buttons.add(button)
+                }
+            }
+        }
     }
     Row(
         modifier = Modifier.width(IntrinsicSize.Min),

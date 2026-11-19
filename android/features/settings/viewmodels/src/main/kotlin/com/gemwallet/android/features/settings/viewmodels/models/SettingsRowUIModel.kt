@@ -10,8 +10,10 @@ fun GemListRow.settingsAction(): SettingsAction? = when (action()) {
     GemRowAction.Notifications -> SettingsAction.Notifications
     GemRowAction.Preferences -> SettingsAction.Preferences
     GemRowAction.WalletConnect -> SettingsAction.Connections
-    GemRowAction.Support -> SettingsAction.Support
-    GemRowAction.Rewards -> SettingsAction.Rewards
+    // NOTE: Rewards, Perpetuals, and Support are disabled.
+    GemRowAction.Support -> null
+    GemRowAction.Rewards -> null
+    GemRowAction.Perpetuals -> null
     GemRowAction.AboutUs -> SettingsAction.AboutUs
     GemRowAction.Developer -> SettingsAction.Developer
     else -> null

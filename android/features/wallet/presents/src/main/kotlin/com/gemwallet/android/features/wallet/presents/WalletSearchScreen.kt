@@ -16,7 +16,6 @@ import com.gemwallet.android.features.assets.presents.select.RecentsScreen
 import com.gemwallet.android.features.assets.presents.select.SelectAssetAction
 import com.gemwallet.android.features.assets.presents.select.SelectAssetScene
 import com.gemwallet.android.features.assets.viewmodels.select.RecentsViewModel
-import com.gemwallet.android.features.perpetuals.presents.components.PerpetualListItem
 import com.gemwallet.android.features.wallet.viewmodels.WalletSearchViewModel
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.SearchBar
@@ -90,36 +89,9 @@ fun WalletSearchScreen(onAction: (WalletSearchAction) -> Unit, viewModel: Wallet
         }
     }
 
-    val pinnedPerpetualRows: List<@Composable (ListPosition) -> Unit> = pinnedPerpetuals.map { item ->
-        @Composable { position: ListPosition ->
-            PerpetualListItem(
-                item = item,
-                listPosition = position,
-                longPressState = longPressedPerpetual,
-                onTogglePin = { handleAction(WalletSearchAction.TogglePerpetualPin(item)) },
-                onClick = { handleAction(WalletSearchAction.OpenPerpetual(item.data.asset.toPrimitives())) },
-            )
-        }
-    }
+    val pinnedPerpetualRows: List<@Composable (ListPosition) -> Unit> = emptyList()
 
-    val perpetualsContent: (LazyListScope.() -> Unit)? = if (state.showsPerpetuals) {
-        {
-            item {
-                SubheaderItem(R.string.perpetuals_title, if (hasMorePerpetuals) ({ handleAction(WalletSearchAction.OpenPerpetuals) }) else null)
-            }
-            itemsPositioned(previewPerpetuals) { position, item ->
-                PerpetualListItem(
-                    item = item,
-                    listPosition = position,
-                    longPressState = longPressedPerpetual,
-                    onTogglePin = { handleAction(WalletSearchAction.TogglePerpetualPin(item)) },
-                    onClick = { handleAction(WalletSearchAction.OpenPerpetual(item.data.asset.toPrimitives())) },
-                )
-            }
-        }
-    } else {
-        null
-    }
+    val perpetualsContent: (LazyListScope.() -> Unit)? = null // NOTE: Perpetuals feature is disabled.
 
     val listsContent: (LazyListScope.() -> Unit)? = if (state.showsLists) {
         {

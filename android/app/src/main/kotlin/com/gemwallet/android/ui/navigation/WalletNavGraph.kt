@@ -40,17 +40,11 @@ import com.gemwallet.android.ui.navigation.routes.collectionsScreen
 import com.gemwallet.android.ui.navigation.routes.confirmTransfer
 import com.gemwallet.android.ui.navigation.routes.connectionsScreen
 import com.gemwallet.android.ui.navigation.routes.contactsScreen
-import com.gemwallet.android.ui.navigation.routes.fiatScreen
 import com.gemwallet.android.ui.navigation.routes.networkAssetsScreen
-import com.gemwallet.android.ui.navigation.routes.perpetualsScreen
 import com.gemwallet.android.ui.navigation.routes.portfolioScreen
 import com.gemwallet.android.ui.navigation.routes.receiveScreen
 import com.gemwallet.android.ui.navigation.routes.recipient
-import com.gemwallet.android.ui.navigation.routes.rewards
 import com.gemwallet.android.ui.navigation.routes.settingsScreen
-import com.gemwallet.android.ui.navigation.routes.stake
-import com.gemwallet.android.ui.navigation.routes.swap
-import com.gemwallet.android.ui.navigation.routes.swapSelect
 import com.gemwallet.android.ui.navigation.routes.transactionScreen
 import com.gemwallet.android.ui.navigation.routes.walletConnectorRequest
 import com.gemwallet.android.ui.navigation.routes.walletDetailScreen
@@ -109,10 +103,10 @@ fun WalletNavGraph(
                     when (action) {
                         WalletSearchAction.AddAsset -> navigator.openAddAsset()
                         WalletSearchAction.Cancel -> onCancel()
-                        WalletSearchAction.OpenPerpetuals -> navigator.openPerpetuals()
+                        WalletSearchAction.OpenPerpetuals -> Unit
                         WalletSearchAction.OpenCollections -> navigator.openCollections()
                         is WalletSearchAction.OpenAsset -> navigator.openAsset(action.asset.id)
-                        is WalletSearchAction.OpenPerpetual -> navigator.openPerpetual(action.asset.id)
+                        is WalletSearchAction.OpenPerpetual -> Unit
                         is WalletSearchAction.OpenRecent -> navigator.openAsset(action.asset.id)
                         is WalletSearchAction.OpenNftCollection -> navigator.openCollection(action.collectionId)
                         is WalletSearchAction.OpenNftAsset -> navigator.openCollectible(action.assetId)
@@ -127,17 +121,17 @@ fun WalletNavGraph(
                 onAction = { action ->
                     when (action) {
                         AssetAction.Close -> onCancel()
-                        is AssetAction.Transfer -> navigator.openRecipient(action.assetId)
+                        is AssetAction.Transfer -> navigator.openRecipient(action.assetId, payment = null)
                         is AssetAction.Receive -> navigator.openReceive(action.assetId)
-                        is AssetAction.Buy -> navigator.openBuy(action.assetId)
-                        is AssetAction.Swap -> navigator.openSwap(action.fromAssetId, action.toAssetId)
+                        is AssetAction.Buy -> Unit
+                        is AssetAction.Swap -> Unit
                         is AssetAction.OpenTransaction -> navigator.openTransaction(action.transactionId)
                         is AssetAction.OpenChart -> navigator.openChart(action.assetId)
                         is AssetAction.OpenNetwork -> navigator.openAsset(action.assetId)
                         is AssetAction.OpenNetworkAssets -> navigator.openNetworkAssets(action.chain)
-                        is AssetAction.Stake -> navigator.openStake(action.assetId)
-                        is AssetAction.Earn -> navigator.openEarn(action.assetId)
-                        AssetAction.OpenPerpetuals -> navigator.openPerpetuals()
+                        is AssetAction.Stake -> Unit
+                        is AssetAction.Earn -> Unit
+                        AssetAction.OpenPerpetuals -> Unit
                         is AssetAction.OpenPriceAlerts -> navigator.openPriceAlerts(action.assetId)
                         is AssetAction.Confirm -> navigator.openConfirmTransfer(action.input)
                     }
@@ -162,14 +156,6 @@ fun WalletNavGraph(
                 onCancel = onCancel,
             )
 
-            swap(
-                navigator = navigator,
-                onConfirm = navigator::openConfirmTransfer,
-                onSelect = navigator::openSwapSelect,
-                onCancel = onCancel,
-            )
-            swapSelect(navigator = navigator, onCancel = onCancel)
-
             recipient(
                 navigator = navigator,
                 cancelAction = onCancel,
@@ -180,7 +166,7 @@ fun WalletNavGraph(
             amount(
                 onCancel = onCancel,
                 onConfirm = navigator::openConfirmTransfer,
-                onBuy = { navigator.openBuy(it) },
+                onBuy = {},
             )
 
             confirmTransfer(
@@ -198,12 +184,6 @@ fun WalletNavGraph(
                 onReceive = navigator::openReceiveCollection,
                 onUnverified = navigator::openUnverifiedCollections,
                 onOpenAddress = navigator::openAddress,
-            )
-
-            fiatScreen(
-                cancelAction = onCancel,
-                onBuy = navigator::openBuy,
-                onFiatTransactions = navigator::openFiatTransactions,
             )
 
             receiveScreen(
@@ -235,14 +215,6 @@ fun WalletNavGraph(
                 onPrivateKeyAccount = navigator::openExportPrivateKey,
             )
 
-            stake(
-                onAmount = navigator::openAmount,
-                onConfirm = navigator::openConfirmTransfer,
-                onDelegation = navigator::openDelegation,
-                onOpenAddress = navigator::openAddress,
-                onCancel = onCancel,
-            )
-
             addAssetScreen(
                 onCancel = onCancel,
                 onFinish = navigator::resetToWallet,
@@ -254,8 +226,8 @@ fun WalletNavGraph(
                         TransactionAction.Close -> onCancel()
                         is TransactionAction.OpenAsset -> navigator.openAsset(it.assetId)
                         is TransactionAction.OpenNft -> navigator.openCollectible(it.assetId)
-                        is TransactionAction.OpenPerpetual -> navigator.openAsset(it.assetId)
-                        is TransactionAction.OpenSwap -> navigator.openTransactionSwap(it.fromAssetId, it.toAssetId)
+                        is TransactionAction.OpenPerpetual -> Unit
+                        is TransactionAction.OpenSwap -> Unit
                         is TransactionAction.OpenAddress -> navigator.openAddress(it.chainAddress)
                         is TransactionAction.CreateContact -> navigator.openAddContact(it.draft)
                         is TransactionAction.AddToContact -> navigator.openAddToContact(it.draft)
@@ -314,20 +286,6 @@ fun WalletNavGraph(
                     navigator.resetToWallet()
                 },
             )
-
-            perpetualsScreen(
-                onOpenPerpetual = navigator::openPerpetual,
-                onOpenAsset = navigator::openAsset,
-                onOpenPortfolio = { navigator.openPortfolio(PortfolioType.Perpetuals) },
-                amountAction = AmountTransactionAction(navigator::openAmount),
-                onSelectDepositAsset = navigator::openPerpetualDepositSelect,
-                confirmAction = ConfirmTransactionAction(navigator::openConfirmTransfer),
-                onCancel = onCancel,
-                onTransaction = navigator::openTransaction,
-                onGetAsset = navigator::openGetAsset,
-            )
-
-            rewards(onClose = onCancel)
 
             addressDetailsScreen(onCancel = onCancel)
 

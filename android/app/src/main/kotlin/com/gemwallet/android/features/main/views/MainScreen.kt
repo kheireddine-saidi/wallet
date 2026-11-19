@@ -206,11 +206,12 @@ fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onW
                                         WalletAction.Search -> navigator.openAssetsSearch()
                                         WalletAction.Send -> navigator.openRecipient()
                                         WalletAction.Receive -> navigator.openReceive()
-                                        WalletAction.Buy -> navigator.openBuy()
-                                        WalletAction.Swap -> navigator.openSwap()
+                                        // NOTE: Buy, Swap, and Perpetuals features are disabled.
+                                        WalletAction.Buy -> Unit
+                                        WalletAction.Swap -> Unit
                                         WalletAction.Portfolio -> navigator.openPortfolio()
-                                        WalletAction.Perpetuals -> navigator.openPerpetuals()
-                                        is WalletAction.OpenPerpetual -> navigator.openPerpetual(action.assetId)
+                                        WalletAction.Perpetuals -> Unit
+                                        is WalletAction.OpenPerpetual -> Unit
                                         is WalletAction.OpenAsset -> navigator.openAsset(action.assetId)
                                         WalletAction.OpenCollections -> navigator.openCollections()
                                         is WalletAction.OpenNftCollection -> navigator.openCollection(action.collectionId)
@@ -225,7 +226,7 @@ fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onW
                             TransactionsRoute -> TransactionsScreen(
                                 listState = activitiesListState,
                                 onTransaction = navigator::openTransaction,
-                                onBuy = navigator::openBuy,
+                                onBuy = {},
                                 onReceive = navigator::openReceive,
                             )
 
@@ -238,8 +239,9 @@ fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onW
                                         SettingsAction.Notifications -> navigator.openNotifications()
                                         SettingsAction.Preferences -> navigator.openPreferences()
                                         SettingsAction.Connections -> navigator.openConnections()
-                                        SettingsAction.Support -> navigator.openSupport()
-                                        SettingsAction.Rewards -> navigator.openRewards()
+                                        // NOTE: Support and Rewards are disabled.
+                                        SettingsAction.Support -> Unit
+                                        SettingsAction.Rewards -> Unit
                                         SettingsAction.AboutUs -> navigator.openAboutUs()
                                         SettingsAction.Developer -> navigator.openDeveloper()
                                     }

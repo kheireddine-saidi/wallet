@@ -11,6 +11,4 @@ sealed interface PreferencesAction {
     data object Cancel : Navigation
 
     data class SetAppearance(val appearance: Appearance) : PreferencesAction
-    data class SetPerpetualEnabled(val enabled: Boolean) : PreferencesAction
-    data class SetPerpetualOption(val setting: PerpetualSetting, val value: Int) : PreferencesAction
 }

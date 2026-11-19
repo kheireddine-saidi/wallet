@@ -31,10 +31,18 @@ internal fun GetAssetSheet(asset: Asset?, options: List<GemAcquireOption>, onDis
         title = { stringResource(R.string.asset_get_asset, it.symbol) },
     ) {
         Column(modifier = Modifier.padding(bottom = paddingDefault)) {
-            options.forEachIndexed { index, option ->
+            // NOTE: Buy and Swap features are disabled. Filter out Buy and Swap acquire options.
+            val filteredOptions = mutableListOf<GemAcquireOption>()
+            for (i in 0 until options.size) {
+                val option = options[i]
+                if (option != GemAcquireOption.BUY && option != GemAcquireOption.SWAP) {
+                    filteredOptions.add(option)
+                }
+            }
+            filteredOptions.forEachIndexed { index, option ->
                 ListItem(
                     model = ListItemModel(title = option.title(context), titleExtra = option.subtitle(context), image = option.image()),
-                    listPosition = ListPosition.getPosition(index, options.size),
+                    listPosition = ListPosition.getPosition(index, filteredOptions.size),
                     modifier = Modifier.clickable { onSelect(option) },
                     accessory = { DataBadgeChevron() },
                 )

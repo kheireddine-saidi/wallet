@@ -13,7 +13,6 @@ import com.gemwallet.android.features.settings.viewmodels.models.PreferencesActi
 fun PreferencesScreen(onAction: (PreferencesAction.Navigation) -> Unit, viewModel: PreferencesViewModel = hiltViewModel()) {
     val sections by viewModel.sections.collectAsStateWithLifecycle()
     val appearance by viewModel.appearance.collectAsStateWithLifecycle()
-    val perpetualDefaults by viewModel.perpetualDefaults.collectAsStateWithLifecycle()
     val configuration = LocalConfiguration.current
 
     LaunchedEffect(configuration) { viewModel.setLanguage(configuration) }
@@ -21,13 +20,9 @@ fun PreferencesScreen(onAction: (PreferencesAction.Navigation) -> Unit, viewMode
     PreferencesScene(
         sections = sections,
         appearance = appearance,
-        perpetualDefaults = perpetualDefaults,
-        perpetualOptions = viewModel.perpetualOptions,
     ) { action ->
         when (action) {
             is PreferencesAction.SetAppearance -> viewModel.setAppearance(action.appearance)
-            is PreferencesAction.SetPerpetualEnabled -> viewModel.setPerpetualEnabled(action.enabled)
-            is PreferencesAction.SetPerpetualOption -> viewModel.setPerpetualOption(action.setting, action.value)
             is PreferencesAction.Navigation -> onAction(action)
         }
     }

@@ -12,24 +12,20 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.gemwallet.android.features.settings.viewmodels.models.PreferencesAction
 import com.gemwallet.android.features.settings.viewmodels.models.PreferencesRowAction
-import com.gemwallet.android.features.settings.viewmodels.models.of
 import com.gemwallet.android.features.settings.viewmodels.models.preferencesAction
-import com.gemwallet.android.features.settings.viewmodels.models.value
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.list_item.GemListRowView
 import com.gemwallet.android.ui.components.list_item.OptionPickerRow
 import com.gemwallet.android.ui.components.list_item.property.itemsPositioned
 import com.gemwallet.android.ui.components.list_item.rows
 import com.gemwallet.android.ui.components.screen.Scene
-import com.gemwallet.android.ui.localization.string
 import com.gemwallet.android.ui.localization.stringRes
 import com.wallet.core.primitives.Appearance
 import uniffi.gemstone.GemGroup
-import uniffi.gemstone.GemPerpetualDefaults
-import uniffi.gemstone.GemPerpetualPickers
+import uniffi.gemstone.GemListRow
 
 @Composable
-internal fun PreferencesScene(sections: List<GemGroup>, appearance: Appearance, perpetualDefaults: GemPerpetualDefaults, perpetualOptions: GemPerpetualPickers, onAction: (PreferencesAction) -> Unit) {
+internal fun PreferencesScene(sections: List<GemGroup>, appearance: Appearance, onAction: (PreferencesAction) -> Unit) {
     val context = LocalContext.current
 
     Scene(
@@ -38,7 +34,17 @@ internal fun PreferencesScene(sections: List<GemGroup>, appearance: Appearance, 
     ) {
         LazyColumn {
             sections.forEach { section ->
-                itemsPositioned(section.rows) { position, row ->
+                // NOTE: Perpetuals and unmapped/null preference rows are hidden.
+                val rows = section.rows
+                val visibleRows = mutableListOf<GemListRow>()
+                for (i in 0 until rows.size) {
+                    val row = rows[i]
+                    val action = row.preferencesAction()
+                    if (action != null && action !is PreferencesRowAction.Perpetuals && action !is PreferencesRowAction.Option) {
+                        visibleRows.add(row)
+                    }
+                }
+                itemsPositioned(visibleRows) { position, row ->
                     when (val action = row.preferencesAction()) {
                         is PreferencesRowAction.Open -> GemListRowView(
                             row = row,
@@ -67,26 +73,7 @@ internal fun PreferencesScene(sections: List<GemGroup>, appearance: Appearance, 
                             onSelect = { onAction(PreferencesAction.SetAppearance(it)) },
                         )
 
-                        is PreferencesRowAction.Perpetuals -> GemListRowView(
-                            row = row,
-                            listPosition = position,
-                            modifier = Modifier.clickable { onAction(PreferencesAction.SetPerpetualEnabled(!action.isOn)) },
-                            onToggle = { _, isOn -> onAction(PreferencesAction.SetPerpetualEnabled(isOn)) },
-                        )
-
-                        is PreferencesRowAction.Option -> {
-                            val options = perpetualOptions.of(action.setting)
-                            OptionPickerRow(
-                                row = row,
-                                listPosition = position,
-                                current = perpetualDefaults.value(action.setting),
-                                options = options.map { it.value.toInt() },
-                                label = { value -> options.first { it.value.toInt() == value }.label.string(LocalContext.current) },
-                                onSelect = { onAction(PreferencesAction.SetPerpetualOption(action.setting, it)) },
-                            )
-                        }
-
-                        null -> GemListRowView(row = row, listPosition = position)
+                        else -> Unit
                     }
                 }
             }

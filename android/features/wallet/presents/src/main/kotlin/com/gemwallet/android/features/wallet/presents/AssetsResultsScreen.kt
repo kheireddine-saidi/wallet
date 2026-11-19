@@ -13,7 +13,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gemwallet.android.ext.toPrimitives
 import com.gemwallet.android.features.assets.presents.select.assetRows
 import com.gemwallet.android.features.assets.presents.select.searchState
-import com.gemwallet.android.features.perpetuals.presents.components.PerpetualListItem
 import com.gemwallet.android.features.wallet.viewmodels.AssetsResultsViewModel
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.list_item.AssetContextActions
@@ -83,18 +82,6 @@ fun AssetsResultsScreen(onAction: (WalletSearchAction) -> Unit, viewModel: Asset
                         longPressedAsset = longPressedAsset,
                         contextActions = contextActions,
                     )
-                }
-                if (state.showsPerpetuals) {
-                    item { SubheaderItem(R.string.perpetuals_title) }
-                    itemsPositioned(perpetuals) { position, item ->
-                        PerpetualListItem(
-                            item = item,
-                            listPosition = position,
-                            longPressState = longPressedPerpetual,
-                            onTogglePin = { viewModel.onTogglePerpetualPin(item) },
-                            onClick = { onPerpetualClick(item.data.asset.toPrimitives()) },
-                        )
-                    }
                 }
                 searchState(state.phase)
             }

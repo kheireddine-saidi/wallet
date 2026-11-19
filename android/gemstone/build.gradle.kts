@@ -44,10 +44,33 @@ android {
 
 tasks.withType<Exec>().configureEach {
     environment("CARGO_TARGET_DIR", coreRoot.resolve("target").absolutePath)
+    val userHome = System.getProperty("user.home")
+    val cargoBin = File(userHome, ".cargo/bin").absolutePath
+    val currentPath = System.getenv("PATH") ?: ""
+    environment("HOME", userHome)
+    environment("USERPROFILE", userHome)
+    if (org.gradle.internal.os.OperatingSystem.current().isWindows) {
+        val gitBin = File(userHome, "AppData/Local/hermes/git/bin").absolutePath
+        val gitUsrBin = File(userHome, "AppData/Local/hermes/git/usr/bin").absolutePath
+        val gitCmd = File(userHome, "AppData/Local/hermes/git/cmd").absolutePath
+        environment("PATH", "$cargoBin;$gitBin;$gitUsrBin;$gitCmd;$currentPath")
+    } else {
+        environment("PATH", "$cargoBin:$currentPath")
+    }
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
     compilerOptions.freeCompilerArgs.add("-Xwarning-level=UNUSED_EXPRESSION:disabled")
+}
+
+val isWindows = org.gradle.internal.os.OperatingSystem.current().isWindows
+
+fun shellCommandLine(cmd: String): List<String> {
+    return if (isWindows) {
+        listOf("cmd", "/c", cmd)
+    } else {
+        listOf("/bin/sh", "-l", "-c", cmd)
+    }
 }
 
 val buildGemstoneHost = tasks.register<Exec>("buildGemstoneHost") {
@@ -55,7 +78,7 @@ val buildGemstoneHost = tasks.register<Exec>("buildGemstoneHost") {
     workingDir = coreRoot
     outputs.file(gemstoneHostLibrary)
     outputs.upToDateWhen { false }
-    commandLine("/bin/sh", "-l", "-c", "cargo rustc --package gemstone --lib --crate-type cdylib")
+    commandLine(shellCommandLine("cargo rustc --package gemstone --lib --crate-type cdylib"))
 }
 
 val bindgenKotlin = tasks.register<Exec>("bindgenKotlin") {
@@ -73,7 +96,7 @@ val bindgenKotlin = tasks.register<Exec>("bindgenKotlin") {
         gemstoneRoot.resolve("justfile"),
     )
     outputs.dir(generatedKotlinDir.resolve("uniffi"))
-    commandLine("/bin/sh", "-l", "-c", "just bindgen-kotlin")
+    commandLine(shellCommandLine("just bindgen-kotlin"))
 }
 
 val buildCargoNdk = tasks.register<Exec>("buildCargoNdk") {
@@ -84,7 +107,7 @@ val buildCargoNdk = tasks.register<Exec>("buildCargoNdk") {
     outputs.upToDateWhen { false }
     doFirst { outputDir.deleteRecursively() }
     environment("CARGO_PROFILE_RELEASE_STRIP", "debuginfo")
-    commandLine("/bin/sh", "-l", "-c", "cargo ndk $cargoNdkTargets -o ${jniLibsDir.absolutePath} rustc --lib --crate-type cdylib $cargoBuildFlag")
+    commandLine(shellCommandLine("cargo ndk $cargoNdkTargets -o ${jniLibsDir.absolutePath} rustc --lib --crate-type cdylib $cargoBuildFlag"))
 }
 
 tasks.configureEach {

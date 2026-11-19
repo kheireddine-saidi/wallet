@@ -21,7 +21,6 @@ dependencies {
     implementation(project(":features:wallet:viewmodels"))
     implementation(project(":features:assets:presents"))
     implementation(project(":features:assets:viewmodels"))
-    implementation(project(":features:perpetuals:presents"))
     implementation(project(":features:nft:presents"))
 
     implementation(libs.hilt.lifecycle.viewmodel.compose)

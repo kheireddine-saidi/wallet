@@ -33,7 +33,15 @@ fun EmptyContentView(state: GemEmptyState, modifier: Modifier = Modifier, symbol
         icon = icon,
         iconVector = iconVector,
         buttons = onAction?.let { onAction ->
-            state.actions.map { action -> EmptyAction(title = stringResource(action.title()), onClick = { onAction(action) }, style = EmptyActionStyle.Secondary) }
+            // NOTE: Buy and Swap features are disabled. Filter out BUY and SWAP buttons.
+            val result = mutableListOf<EmptyAction>()
+            for (i in 0 until state.actions.size) {
+                val action = state.actions[i]
+                if (action != GemEmptyStateAction.BUY && action != GemEmptyStateAction.SWAP) {
+                    result.add(EmptyAction(title = stringResource(action.title()), onClick = { onAction(action) }, style = EmptyActionStyle.Secondary))
+                }
+            }
+            result
         }.orEmpty(),
         modifier = modifier,
     )

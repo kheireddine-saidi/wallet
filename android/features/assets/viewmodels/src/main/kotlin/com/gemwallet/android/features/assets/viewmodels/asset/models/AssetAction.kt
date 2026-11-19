@@ -56,9 +56,10 @@ fun GemRowAction.detailsAction(assetId: AssetId, network: AssetAction.Navigation
 
     GemRowAction.Network -> network
 
-    GemRowAction.Earn -> AssetAction.Earn(assetId)
+    // NOTE: Stake and Earn features are disabled.
+    GemRowAction.Earn -> null
 
-    GemRowAction.Stake -> AssetAction.Stake(assetId)
+    GemRowAction.Stake -> null
 
     GemRowAction.PriceAlerts -> AssetAction.OpenPriceAlerts(assetId)
 
