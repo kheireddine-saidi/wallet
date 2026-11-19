@@ -11,13 +11,8 @@ lint:
 test:
     cargo test --lib
 
-<<<<<<< HEAD
 export ANDROID_HOME := env("ANDROID_HOME", env("HOME", env("USERPROFILE", "")) / "Library/Android/sdk")
-export CARGO_NDK_VERSION := env("CARGO_NDK_VERSION", "4.1.2")
 
-=======
-export ANDROID_HOME := env("ANDROID_HOME", env("HOME") / "Library/Android/sdk")
->>>>>>> origin/main
 install-ndk:
     #!/usr/bin/env bash
     set -eu
@@ -53,7 +48,7 @@ export ANDROID_MODULE_FOLDER := "android/gemstone/src/main/java"
 _generate-bindings LANGUAGE OUTPUT:
     #!/usr/bin/env bash
     set -euo pipefail
-    export PATH="$HOME/.cargo/bin:$USERPROFILE/.cargo/bin:$PATH"
+    export PATH="$PATH:$HOME/.cargo/bin:$USERPROFILE/.cargo/bin"
     library="${TARGET_DIR}/debug/${DY_LIB_NAME}"
     echo "Generating {{LANGUAGE}} bindings from $library"
     rm -rf "{{OUTPUT}}"
@@ -66,7 +61,7 @@ bindgen-swift: (_generate-bindings "swift" GEN_SWIFT_FOLDER)
 bindgen-kotlin: (_generate-bindings "kotlin" GEN_KOTLIN_FOLDER)
     #!/usr/bin/env bash
     set -euo pipefail
-    export PATH="$HOME/.cargo/bin:$USERPROFILE/.cargo/bin:$PATH"
+    export PATH="$PATH:$HOME/.cargo/bin:$USERPROFILE/.cargo/bin"
     mkdir -p ${ANDROID_MODULE_FOLDER}
     if ! diff -qr "${GEN_KOTLIN_FOLDER}/uniffi" "${ANDROID_MODULE_FOLDER}/uniffi" >/dev/null 2>&1; then
         rm -rf "${ANDROID_MODULE_FOLDER}/uniffi"
