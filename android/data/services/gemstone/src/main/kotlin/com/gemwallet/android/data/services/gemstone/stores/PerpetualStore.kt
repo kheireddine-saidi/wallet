@@ -4,53 +4,22 @@ import com.gemwallet.android.data.services.store.database.BalancesDao
 import com.gemwallet.android.data.services.store.database.PerpetualDao
 import com.gemwallet.android.data.services.store.database.PerpetualPositionDao
 import com.gemwallet.android.data.services.store.database.StoreTransactionRunner
-import com.gemwallet.android.data.services.store.database.entities.toPerpetual
-import com.gemwallet.android.data.services.store.database.entities.toPerpetualPosition
-import com.gemwallet.android.data.services.store.database.entities.toRecord
-import com.gemwallet.android.ext.toGem
-import com.gemwallet.android.ext.toPrimitives
-import com.wallet.core.primitives.PerpetualPosition
-import com.wallet.core.primitives.WalletId
 import uniffi.gemstone.GemPerpetualStore
 import uniffi.gemstone.PerpetualProvider as GemPerpetualProvider
 
-class GemstonePerpetualStore(private val perpetualDao: PerpetualDao, private val perpetualPositionDao: PerpetualPositionDao, private val balancesDao: BalancesDao, private val transactionRunner: StoreTransactionRunner) : GemPerpetualStore {
-
-    override suspend fun getPerpetuals(names: List<String>): List<uniffi.gemstone.Perpetual> = perpetualDao.getPerpetualsByNames(names).map { it.toPerpetual().toGem() }
-
-    override suspend fun savePerpetuals(data: List<uniffi.gemstone.PerpetualData>) = perpetualDao.upsert(data.map { it.perpetual.toPrimitives().toRecord() })
-
-    override suspend fun setPinned(perpetualIds: List<String>, pinned: Boolean) = perpetualDao.setPinned(perpetualIds, pinned)
-
-    override suspend fun clearPerpetuals(collateralAssetIds: List<String>) = transactionRunner.run {
-        perpetualPositionDao.deleteAll()
-        perpetualDao.deleteAll()
-        collateralAssetIds.forEach { balancesDao.deleteByAssetId(it) }
-    }
-
-    override suspend fun getPositions(walletId: String, provider: GemPerpetualProvider): List<uniffi.gemstone.PerpetualPosition> = perpetualPositionDao.getPositionsByProvider(walletId, provider.toPrimitives()).map {
-        it.toPerpetualPosition().toGem()
-    }
-
-    override suspend fun updateMarket(market: uniffi.gemstone.PerpetualMarketData) {
-        perpetualDao.updateMarket(
-            coin = market.coin,
-            price = market.price,
-            pricePercentChange24h = market.pricePercentChange24h,
-            openInterest = market.openInterest,
-            volume24h = market.volume24h,
-            funding = market.funding,
-        )
-    }
-
-    override suspend fun updatePrices(prices: List<uniffi.gemstone.PerpetualPrice>) = perpetualDao.updatePrices(prices.map { it.toPrimitives() })
-
-    override suspend fun getPositionIds(walletId: String, provider: GemPerpetualProvider): List<String> = perpetualPositionDao.getPositionsByProvider(walletId, provider.toPrimitives()).map { it.id }
-
-    override suspend fun updatePositions(walletId: String, positions: List<uniffi.gemstone.PerpetualPosition>, deleteIds: List<String>) = putPositions(WalletId(walletId), positions.map { it.toPrimitives() }, deleteIds)
-
-    private suspend fun putPositions(walletId: WalletId, positions: List<PerpetualPosition>, deleteIds: List<String>) {
-        if (deleteIds.isEmpty() && positions.isEmpty()) return
-        perpetualPositionDao.deleteAndUpsert(walletId.id, deleteIds, positions.map { it.toRecord(walletId.id) })
-    }
+class GemstonePerpetualStore(
+    private val perpetualDao: PerpetualDao,
+    private val perpetualPositionDao: PerpetualPositionDao,
+    private val balancesDao: BalancesDao,
+    private val transactionRunner: StoreTransactionRunner,
+) : GemPerpetualStore {
+    override suspend fun getPerpetuals(names: List<String>): List<uniffi.gemstone.Perpetual> = emptyList()
+    override suspend fun savePerpetuals(data: List<uniffi.gemstone.PerpetualData>) {}
+    override suspend fun setPinned(perpetualIds: List<String>, pinned: Boolean) {}
+    override suspend fun clearPerpetuals(collateralAssetIds: List<String>) {}
+    override suspend fun getPositions(walletId: String, provider: GemPerpetualProvider): List<uniffi.gemstone.PerpetualPosition> = emptyList()
+    override suspend fun updateMarket(market: uniffi.gemstone.PerpetualMarketData) {}
+    override suspend fun updatePrices(prices: List<uniffi.gemstone.PerpetualPrice>) {}
+    override suspend fun getPositionIds(walletId: String, provider: GemPerpetualProvider): List<String> = emptyList()
+    override suspend fun updatePositions(walletId: String, positions: List<uniffi.gemstone.PerpetualPosition>, deleteIds: List<String>) {}
 }
