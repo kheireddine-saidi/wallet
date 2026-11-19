@@ -57,9 +57,9 @@ tasks.withType<Exec>().configureEach {
         val gitBin = File(userHome, "AppData/Local/hermes/git/bin").absolutePath
         val gitUsrBin = File(userHome, "AppData/Local/hermes/git/usr/bin").absolutePath
         val gitCmd = File(userHome, "AppData/Local/hermes/git/cmd").absolutePath
-        environment("PATH", "$cargoBin;$gitBin;$gitUsrBin;$gitCmd;$currentPath")
+        environment("PATH", "$currentPath;$cargoBin;$gitBin;$gitUsrBin;$gitCmd")
     } else {
-        environment("PATH", "$cargoBin:$currentPath")
+        environment("PATH", "$currentPath:$cargoBin")
     }
 }
 
