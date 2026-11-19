@@ -57,8 +57,8 @@ android {
         applicationId = "com.gemwallet.android"
         minSdk = 28
         targetSdk = 37
-        versionCode = 910
-        versionName = "2.114.97"
+        versionCode = 913
+        versionName = "2.114.100"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -92,21 +92,9 @@ android {
                     .replace("\\", "\\\\")
                     .replace("\"", "\\\"")
                 buildConfigField("String", "UPDATE_URL", "\"$resolvedUpdateUrl\"")
-                buildConfigField("boolean", "WALLET_CONNECT", (channel.getValue("walletConnect") as Boolean).toString())
             }
         }
     }
-    signingConfigs {
-        create("release") {
-            keyAlias = System.getenv("ANDROID_KEYSTORE_ALIAS")
-            keyPassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
-            storeFile = file(System.getenv("ANDROID_KEYSTORE_FILENAME") ?: "release.keystore")
-            storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
-            enableV1Signing = false
-            enableV2Signing = true
-        }
-    }
-
     buildTypes {
         getByName("debug") {
             isMinifyEnabled = false
@@ -141,11 +129,6 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             isDebuggable = false
-            if (System.getenv("SKIP_SIGN") == "true") {
-                signingConfig = null
-            } else {
-                signingConfig = signingConfigs.getByName("release")
-            }
         }
 
     }
