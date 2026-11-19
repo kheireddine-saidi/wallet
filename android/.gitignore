@@ -36,3 +36,4 @@ app/release/
 *.sha1
 .kotlin/
 .claude/
+tmp/
