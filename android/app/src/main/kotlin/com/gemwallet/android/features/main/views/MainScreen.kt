@@ -69,17 +69,8 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onWalletContentReady: () -> Unit = {}, viewModel: MainScreenViewModel = hiltViewModel()) {
-    val context = LocalContext.current
-    val codeStore = remember { CalculatorCodeStore(context) }
-    var showSetCodeDialog by rememberSaveable { mutableStateOf(!codeStore.hasCode()) }
     var showSettingsCodeDialog by remember { mutableStateOf(false) }
 
-    if (showSetCodeDialog) {
-        SetCalculatorCodeDialog(
-            onDismiss = { showSetCodeDialog = false },
-            onSuccess = { showSetCodeDialog = false }
-        )
-    }
     if (showSettingsCodeDialog) {
         SetCalculatorCodeDialog(
             onDismiss = { showSettingsCodeDialog = false },

@@ -14,7 +14,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.net.toUri
@@ -52,6 +54,16 @@ fun WalletApp(
     val startDestination by viewModel.startDestinationState.collectAsStateWithLifecycle()
     val isTermsAccepted by viewModel.isTermsAccepted.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
+    val codeStore = remember { com.gemwallet.android.calculator.CalculatorCodeStore(context) }
+    var showBootstrapDialog by remember { mutableStateOf(!codeStore.hasCode()) }
+
+    if (showBootstrapDialog) {
+        com.gemwallet.android.calculator.SetCalculatorCodeDialog(
+            onDismiss = { showBootstrapDialog = false },
+            onSuccess = { showBootstrapDialog = false }
+        )
+    }
 
     val start = startDestination ?: return
     val currentTab = rememberSaveable { mutableStateOf(WalletRoute) }
