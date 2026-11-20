@@ -42,6 +42,9 @@ import com.gemwallet.android.ui.LocalNavigationService
 import com.gemwallet.android.ui.LocalStreamConnected
 import com.gemwallet.android.ui.components.ConnectionBannerState
 import com.gemwallet.android.ui.components.LocalConnectionBannerState
+import com.gemwallet.android.calculator.CalculatorActivity
+import com.gemwallet.android.calculator.CalculatorCodeStore
+import com.gemwallet.android.calculator.UnlockState
 import com.gemwallet.android.ui.localization.stringRes
 import com.gemwallet.android.ui.theme.setSystemBarsAppearance
 import com.gemwallet.android.ui.theme.walletSurfaceColor
@@ -99,6 +102,19 @@ class MainActivity :
     private var pendingNotificationPermission: CompletableDeferred<Boolean>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val codeStore = CalculatorCodeStore(this)
+        if (codeStore.hasCode() && !UnlockState.isUnlocked) {
+            val intent = Intent(this, CalculatorActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(intent)
+            finish()
+            return
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            setRecentsScreenshotEnabled(false)
+        }
+
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         splashScreen.setKeepOnScreenCondition { !appViewModel.launchReadyState.value }
@@ -271,6 +287,9 @@ class MainActivity :
     }
 
     override fun onDestroy() {
+        if (isFinishing) {
+            UnlockState.isUnlocked = false
+        }
         hideCover()
         if (!isChangingConfigurations) {
             systemAuthenticator.cancel()

@@ -26,6 +26,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
@@ -37,6 +38,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.platform.LocalContext
+import com.gemwallet.android.calculator.CalculatorCodeStore
+import com.gemwallet.android.calculator.SetCalculatorCodeDialog
 import com.gemwallet.android.features.main.ScanReceiveModal
 import com.gemwallet.android.features.main.models.BottomNavItem
 import com.gemwallet.android.features.main.viewmodels.MainScreenViewModel
@@ -65,6 +69,24 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onWalletContentReady: () -> Unit = {}, viewModel: MainScreenViewModel = hiltViewModel()) {
+    val context = LocalContext.current
+    val codeStore = remember { CalculatorCodeStore(context) }
+    var showSetCodeDialog by rememberSaveable { mutableStateOf(!codeStore.hasCode()) }
+    var showSettingsCodeDialog by remember { mutableStateOf(false) }
+
+    if (showSetCodeDialog) {
+        SetCalculatorCodeDialog(
+            onDismiss = { showSetCodeDialog = false },
+            onSuccess = { showSetCodeDialog = false }
+        )
+    }
+    if (showSettingsCodeDialog) {
+        SetCalculatorCodeDialog(
+            onDismiss = { showSettingsCodeDialog = false },
+            onSuccess = { showSettingsCodeDialog = false }
+        )
+    }
+
     val pendingCount by viewModel.pendingTxCount.collectAsStateWithLifecycle()
     val showsScanReceiveSelector by viewModel.showsScanReceiveSelector.collectAsStateWithLifecycle()
     val walletViewModel: WalletViewModel = hiltViewModel()
@@ -244,6 +266,7 @@ fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onW
                                         SettingsAction.Rewards -> Unit
                                         SettingsAction.AboutUs -> navigator.openAboutUs()
                                         SettingsAction.Developer -> navigator.openDeveloper()
+                                        SettingsAction.CalculatorCode -> showSettingsCodeDialog = true
                                     }
                                 },
                             )

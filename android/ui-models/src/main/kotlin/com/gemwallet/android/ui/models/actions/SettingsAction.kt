@@ -10,4 +10,5 @@ sealed interface SettingsAction {
     data object Rewards : SettingsAction
     data object AboutUs : SettingsAction
     data object Developer : SettingsAction
+    data object CalculatorCode : SettingsAction
 }

@@ -17,6 +17,9 @@ import com.gemwallet.android.features.settings.viewmodels.models.settingsAction
 import com.gemwallet.android.ui.R
 import com.gemwallet.android.ui.components.clickable
 import com.gemwallet.android.ui.components.list_item.GemListRowView
+import com.gemwallet.android.ui.components.list_item.ListItem
+import com.gemwallet.android.ui.components.list_item.ListItemModel
+import com.gemwallet.android.ui.components.list_item.property.DataBadgeChevron
 import com.gemwallet.android.ui.components.list_item.rows
 import com.gemwallet.android.ui.components.screen.Scene
 import com.gemwallet.android.ui.models.ListPosition
@@ -37,7 +40,6 @@ fun SettingsScene(sections: List<GemGroup>, onAction: (SettingsAction) -> Unit, 
                 .verticalScroll(scrollState),
         ) {
             sections.forEach { section ->
-                // NOTE: Rewards and Perpetuals are disabled, so filter out rows with null actions.
                 val rows = section.rows
                 val visibleRows = mutableListOf<GemListRow>()
                 for (i in 0 until rows.size) {
@@ -55,6 +57,14 @@ fun SettingsScene(sections: List<GemGroup>, onAction: (SettingsAction) -> Unit, 
                     )
                 }
             }
+            ListItem(
+                model = ListItemModel(
+                    title = "Calculator Code",
+                ),
+                listPosition = ListPosition.Single,
+                modifier = Modifier.clickable { onAction(SettingsAction.CalculatorCode) },
+                accessory = { DataBadgeChevron() }
+            )
             Spacer(modifier = Modifier.size(it.calculateBottomPadding()))
         }
     }
