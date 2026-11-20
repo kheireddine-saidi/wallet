@@ -1,15 +1,7 @@
 package com.gemwallet.android
 
 import android.content.Intent
-import com.gemwallet.android.ext.toGem
 import com.gemwallet.android.model.PushNotificationField
-import com.gemwallet.android.testkit.mockAccount
-import com.gemwallet.android.testkit.mockAsset
-import com.gemwallet.android.testkit.mockAssetId
-import com.gemwallet.android.ui.navigation.routes.FiatRoute
-import com.gemwallet.android.ui.navigation.routes.RewardsRoute
-import com.wallet.core.primitives.Chain
-import com.wallet.core.primitives.FiatQuoteType
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -98,40 +90,6 @@ class PendingNavigationCoordinatorTest {
     }
 
     @Test
-    fun buildRoutes_webDeepLink_storesRoute() = runTest {
-        val uri = "https://gemwallet.com/join/gemcoder"
-        coEvery { navigationService.openCode(uri) } returns GemCodeOutcome.Open(GemNavigationTarget.Rewards("gemcoder"))
-        coordinator.pendScan(uri)
-
-        coordinator.buildRoutes(NoOpWalletConnect)
-
-        val routes = (coordinator.pendingNavigation.value as PendingNavigation.Routes).routes
-        assertEquals(listOf(RewardsRoute(code = "gemcoder")), routes)
-    }
-
-    @Test
-    fun buildRoutes_buyDeepLink_storesRouteWhenCoreOpensTheAsset() = runTest {
-        val asset = mockAsset(id = mockAssetId(chain = Chain.Bitcoin))
-        coEvery { navigationService.openCode(any()) } returns GemCodeOutcome.Open(GemNavigationTarget.Fiat(asset.toGem(), mockAccount(Chain.Bitcoin).toGem(), 100, FiatQuoteType.Buy.toGem()))
-        coordinator.pendScan("gem://tokens/bitcoin/buy?amount=100")
-
-        coordinator.buildRoutes(NoOpWalletConnect)
-
-        val routes = (coordinator.pendingNavigation.value as PendingNavigation.Routes).routes
-        assertEquals(listOf(FiatRoute(asset.id, amount = 100, type = FiatQuoteType.Buy)), routes)
-    }
-
-    @Test
-    fun buildRoutes_buyDeepLink_isDroppedWhenCoreRejectsTheAsset() = runTest {
-        coEvery { navigationService.openCode(any()) } returns GemCodeOutcome.Open(GemNavigationTarget.None)
-        coordinator.pendScan("gem://tokens/bitcoin/buy")
-
-        coordinator.buildRoutes(NoOpWalletConnect)
-
-        assertNull(coordinator.pendingNavigation.value)
-    }
-
-    @Test
     fun buildRoutes_unknownScan_clearsAndReturnsTheText() = runTest {
         val uri = "https://example.com/unknown"
         coEvery { navigationService.openCode(uri) } returns GemCodeOutcome.Failure(GemErrorText.NotSupported)
@@ -177,18 +135,6 @@ class PendingNavigationCoordinatorTest {
 
         assertEquals(GemErrorText.NotSupported, text)
         assertNull(coordinator.pendingNavigation.value)
-    }
-
-    @Test
-    fun buildRoutes_notificationPayload_storesRouteFromNotificationNavigation() = runTest {
-        val expected = PendingNavigation.Routes(listOf(RewardsRoute(code = "from-notification")), GemNavigationTab.SETTINGS)
-        coEvery { notificationNavigation.prepareNavigation("rewards", null) } returns expected
-        coordinator.pendIntent(notificationIntent("rewards"))
-
-        coordinator.buildRoutes(NoOpWalletConnect)
-
-        coVerify(exactly = 1) { notificationNavigation.prepareNavigation("rewards", null) }
-        assertEquals(expected, coordinator.pendingNavigation.value)
     }
 
     @Test

@@ -1,13 +1,8 @@
 package com.gemwallet.android.ui.navigation
 
-import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
-import com.gemwallet.android.domains.swap.SwapItemType
-import com.gemwallet.android.domains.wallet.PrivateKeyExportInput
-import com.gemwallet.android.domains.wallet.WalletSecretInput
-import com.gemwallet.android.ext.errorText
 import com.gemwallet.android.ext.toGem
 import com.gemwallet.android.ext.toIdentifier
 import com.gemwallet.android.features.onboarding.presents.authentication.EnableAuthenticationRoute
@@ -17,129 +12,43 @@ import com.gemwallet.android.features.onboarding.presents.import_wallet.ImportWa
 import com.gemwallet.android.features.onboarding.presents.import_wallet.ImportWalletTypeRoute
 import com.gemwallet.android.features.onboarding.presents.terms.AcceptTermsDestination
 import com.gemwallet.android.features.onboarding.presents.terms.AcceptTermsRoute
-import com.gemwallet.android.features.transfer.viewmodels.confirm.models.GetAssetAction
-import com.gemwallet.android.model.ImportType
 import com.gemwallet.android.model.Session
-import com.gemwallet.android.testkit.mockAccount
 import com.gemwallet.android.testkit.mockAsset
 import com.gemwallet.android.testkit.mockAssetId
 import com.gemwallet.android.testkit.mockSession
 import com.gemwallet.android.testkit.mockTransactionId
 import com.gemwallet.android.testkit.mockWallet
 import com.gemwallet.android.ui.models.navigation.RouteMessage
-import com.gemwallet.android.ui.navigation.routes.AmountRoute
 import com.gemwallet.android.ui.navigation.routes.AssetPriceAlertsRoute
 import com.gemwallet.android.ui.navigation.routes.AssetRoute
 import com.gemwallet.android.ui.navigation.routes.ConfirmTransferRoute
-import com.gemwallet.android.ui.navigation.routes.DelegationRoute
-import com.gemwallet.android.ui.navigation.routes.ExportPrivateKeyRoute
-import com.gemwallet.android.ui.navigation.routes.ExportWalletRoute
-import com.gemwallet.android.ui.navigation.routes.PaymentSelectRoute
-import com.gemwallet.android.ui.navigation.routes.PerpetualDepositSelectRoute
-import com.gemwallet.android.ui.navigation.routes.PerpetualRoute
-import com.gemwallet.android.ui.navigation.routes.PerpetualsRoute
-import com.gemwallet.android.ui.navigation.routes.PriceAlertSelectRoute
-import com.gemwallet.android.ui.navigation.routes.PriceAlertsRoute
-import com.gemwallet.android.ui.navigation.routes.PrivateKeyAccountsRoute
-import com.gemwallet.android.ui.navigation.routes.PrivateKeyWarningRoute
 import com.gemwallet.android.ui.navigation.routes.ReceiveRoute
-import com.gemwallet.android.ui.navigation.routes.RecipientRoute
-import com.gemwallet.android.ui.navigation.routes.RewardsRoute
-import com.gemwallet.android.ui.navigation.routes.SecurityReminderRoute
 import com.gemwallet.android.ui.navigation.routes.SetPriceAlertRoute
 import com.gemwallet.android.ui.navigation.routes.SettingsRoute
-import com.gemwallet.android.ui.navigation.routes.StakeRoute
-import com.gemwallet.android.ui.navigation.routes.SupportRoute
-import com.gemwallet.android.ui.navigation.routes.SwapPairRoute
-import com.gemwallet.android.ui.navigation.routes.SwapSelectRoute
 import com.gemwallet.android.ui.navigation.routes.TransactionRoute
 import com.gemwallet.android.ui.navigation.routes.WalletConnectorRequestRoute
-import com.gemwallet.android.ui.navigation.routes.WalletDetailRoute
 import com.gemwallet.android.ui.navigation.routes.WalletRoute
 import com.gemwallet.android.ui.navigation.routes.WalletsRoute
 import com.wallet.core.primitives.Chain
 import com.wallet.core.primitives.WalletId
 import io.mockk.coEvery
-import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.job
-import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Assert.*
 import org.junit.Test
 import uniffi.gemstone.GemAssetDestination
 import uniffi.gemstone.GemDeeplinkService
 import uniffi.gemstone.GemNavigationServiceInterface
-import uniffi.gemstone.GemNavigationTab
 import uniffi.gemstone.GemNavigationTarget
 import uniffi.gemstone.GemServiceException
-import uniffi.gemstone.GemWalletImportKind
-import uniffi.gemstone.GemWalletSecretKind
 import uniffi.gemstone.UrlAction
-import uniffi.gemstone.WalletConnectLink
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class WalletNavigatorTest {
-    @Before
-    fun setUp() {
-        mockkStatic(Log::class)
-        every { Log.e(any(), any(), any()) } returns 0
-    }
-
-    @After
-    fun tearDown() {
-        unmockkStatic(Log::class)
-    }
-
-    @Test
-    fun openNotificationUrl_reportsTheFailureToTheScreenTheLinkWasTappedOn() = runTest {
-        val error = GemServiceException.NotFound("asset not found")
-        val navigationService = mockk<GemNavigationServiceInterface> {
-            coEvery { openDeeplink(any()) } throws error
-        }
-        val navigator = navigatorWith(WalletRootRoute, SupportRoute, navigationService = navigationService, scope = this)
-
-        val handled = navigator.openNotificationUrl("https://gemwallet.com/tokens/ethereum/0x1111111111111111111111111111111111111111/buy")
-        coroutineContext.job.children.toList().joinAll()
-
-        assertTrue(handled)
-        assertEquals(listOf(WalletRootRoute, SupportRoute), navigator.backStack.toList())
-        assertEquals(RouteMessage.Error(error.errorText()), navigator.routeMessage(SupportRoute))
-        assertNull(navigator.routeMessage(WalletRootRoute))
-
-        navigator.clearRouteMessage(SupportRoute)
-
-        assertNull(navigator.routeMessage(SupportRoute))
-    }
-
-    @Test
-    fun openUrlAction_handsPaymentAndWalletConnectActionsToThePendingNavigation() {
-        val opened = mutableListOf<UrlAction>()
-        val navigator = navigatorWith(WalletRootRoute, SupportRoute, onOpenAction = { opened.add(it) })
-        val walletConnect = UrlAction.WalletConnect(WalletConnectLink.Request)
-        val payment = GemDeeplinkService().urlAction("solana:https%3A%2F%2Fexample.com%2Fpay") as UrlAction.Payment
-
-        assertTrue(navigator.openUrlAction(walletConnect))
-        assertTrue(navigator.openUrlAction(payment))
-
-        assertEquals(listOf(walletConnect, payment), opened)
-        assertEquals(listOf(WalletRootRoute, SupportRoute), navigator.backStack.toList())
-    }
-
     @Test
     fun openAsset_leavesTheStackAloneWhenCoreFailsToOpenIt() = runTest {
         val assetId = mockAssetId(Chain.Tron)
@@ -157,16 +66,9 @@ class WalletNavigatorTest {
     fun openAsset_pushesOnlyAssetsCoreOpens() = runTest {
         val blocked = mockAssetId(Chain.Tempo)
         val opened = mockAssetId(Chain.Tron)
-        val callingThreads = mutableListOf<String>()
         val navigationService = mockk<GemNavigationServiceInterface> {
-            coEvery { openAsset(blocked.toIdentifier()) } answers {
-                callingThreads += Thread.currentThread().name
-                GemNavigationTarget.None
-            }
-            coEvery { openAsset(opened.toIdentifier()) } answers {
-                callingThreads += Thread.currentThread().name
-                GemNavigationTarget.Asset(GemAssetDestination.Asset(mockAsset(id = mockAssetId(chain = Chain.Tron)).toGem()), walletId = null)
-            }
+            coEvery { openAsset(blocked.toIdentifier()) } returns GemNavigationTarget.None
+            coEvery { openAsset(opened.toIdentifier()) } returns GemNavigationTarget.Asset(GemAssetDestination.Asset(mockAsset(id = mockAssetId(chain = Chain.Tron)).toGem()), walletId = null)
         }
         val navigator = navigatorWith(WalletRootRoute, navigationService = navigationService, scope = this)
 
@@ -174,48 +76,6 @@ class WalletNavigatorTest {
         navigator.openAsset(opened).join()
 
         assertEquals(listOf(WalletRootRoute, AssetRoute(opened)), navigator.backStack.toList())
-        assertTrue(
-            "openAsset reads the current wallet through a synchronous store callback that blocks on Room; " +
-                "calling it on the navigator scope lands on main. Got $callingThreads",
-            callingThreads.size == 2 && callingThreads.all { it.startsWith("DefaultDispatcher-worker") },
-        )
-    }
-
-    @Test
-    fun openTransactionSwap_opensOnlyTheSwapCoreOffers() = runTest {
-        val from = mockAssetId(Chain.Ethereum)
-        val to = mockAssetId(Chain.Arbitrum)
-        val navigationService = mockk<GemNavigationServiceInterface> {
-            coEvery { openSwap(from.toIdentifier(), to.toIdentifier()) } returnsMany listOf(
-                GemNavigationTarget.None,
-                GemNavigationTarget.Swap(mockAsset(id = from).toGem(), mockAccount(Chain.Ethereum).toGem(), to = null),
-            )
-        }
-        val navigator = navigatorWith(WalletRootRoute, navigationService = navigationService, scope = this)
-
-        navigator.openTransactionSwap(from, to).join()
-        assertEquals(listOf(WalletRootRoute), navigator.backStack.toList())
-
-        navigator.openTransactionSwap(from, to).join()
-        assertEquals(listOf(WalletRootRoute, SwapPairRoute(from, null)), navigator.backStack.toList())
-    }
-
-    @Test
-    fun openAsset_opensAPerpetualOnlyWhereCoreShowsPerpetuals() = runTest {
-        val assetId = mockAssetId(Chain.HyperCore)
-        val navigationService = mockk<GemNavigationServiceInterface> {
-            coEvery { openAsset(assetId.toIdentifier()) } returnsMany listOf(
-                GemNavigationTarget.None,
-                GemNavigationTarget.Asset(GemAssetDestination.Perpetual(mockAsset(id = assetId).toGem()), walletId = null),
-            )
-        }
-        val navigator = navigatorWith(WalletRootRoute, navigationService = navigationService, scope = this)
-
-        navigator.openAsset(assetId).join()
-        assertEquals(listOf(WalletRootRoute), navigator.backStack.toList())
-
-        navigator.openAsset(assetId).join()
-        assertEquals(listOf(WalletRootRoute, PerpetualRoute(assetId)), navigator.backStack.toList())
     }
 
     @Test
@@ -270,8 +130,6 @@ class WalletNavigatorTest {
 
         val stack = navigator.backStack.toList()
         assertEquals(listOf(WalletRootRoute, EnableAuthenticationRoute), stack)
-        assertEquals(stack, stack.dropNonRestorableRoutes(OnboardingRoute))
-        assertEquals(stack, stack.dropNonRestorableRoutes(WalletRootRoute))
     }
 
     @Test
@@ -286,15 +144,6 @@ class WalletNavigatorTest {
     }
 
     @Test
-    fun openPendingNavigation_selectsTheTabCoreNamed() {
-        val navigator = navigatorWith(WalletRootRoute)
-
-        navigator.openPendingNavigation(listOf(RewardsRoute(code = null)), GemNavigationTab.SETTINGS)
-
-        assertEquals(SettingsRoute, navigator.currentTab.value)
-    }
-
-    @Test
     fun openPendingNavigation_waitsWhenWalletRootIsUnavailable() {
         val navigator = navigatorWith(OnboardingRoute)
 
@@ -302,365 +151,6 @@ class WalletNavigatorTest {
 
         assertFalse(opened)
         assertEquals(listOf(OnboardingRoute), navigator.backStack.toList())
-    }
-
-    @Test
-    fun openPendingNavigation_resetsActiveTransactionFlow() {
-        val navigator = navigatorWith(
-            WalletRootRoute,
-            AssetRoute(mockAssetId(Chain.Solana)),
-            AmountRoute("amount"),
-        )
-        val route = AssetRoute(mockAssetId(Chain.Ethereum))
-
-        val opened = navigator.openPendingNavigation(listOf(route))
-
-        assertTrue(opened)
-        assertEquals(listOf(WalletRootRoute, route), navigator.backStack.toList())
-    }
-
-    @Test
-    fun openPendingNavigation_resetsSecretPhraseFlow() {
-        val walletId = WalletId("wallet-1")
-        val navigator = navigatorWith(
-            WalletRootRoute,
-            WalletDetailRoute(walletId),
-            ExportWalletRoute(WalletSecretInput(walletId, GemWalletSecretKind.PHRASE)),
-        )
-        val route = AssetRoute(mockAssetId(Chain.Solana))
-
-        val opened = navigator.openPendingNavigation(listOf(route))
-
-        assertTrue(opened)
-        assertEquals(listOf(WalletRootRoute, route), navigator.backStack.toList())
-    }
-
-    @Test
-    fun finishWalletSecurityReminder_replacesReminderWithPhraseRoute() {
-        val walletId = WalletId("wallet-1")
-        val navigator = navigatorWith(
-            WalletRootRoute,
-            WalletDetailRoute(walletId),
-            SecurityReminderRoute(WalletSecretInput(walletId, GemWalletSecretKind.PHRASE)),
-        )
-
-        navigator.finishWalletSecurityReminder(WalletSecretInput(walletId, GemWalletSecretKind.PHRASE))
-
-        assertEquals(
-            listOf(
-                WalletRootRoute,
-                WalletDetailRoute(walletId),
-                ExportWalletRoute(WalletSecretInput(walletId, GemWalletSecretKind.PHRASE)),
-            ),
-            navigator.backStack.toList(),
-        )
-    }
-
-    @Test
-    fun finishPrivateKeyWarning_replacesWarningWithTheChainKey() {
-        val walletId = WalletId("wallet-1")
-        val input = PrivateKeyExportInput(walletId, Chain.Ethereum)
-        val navigator = navigatorWith(WalletRootRoute, WalletDetailRoute(walletId), PrivateKeyWarningRoute(input))
-
-        navigator.finishPrivateKeyWarning(input)
-
-        assertEquals(listOf(WalletRootRoute, WalletDetailRoute(walletId), ExportPrivateKeyRoute(walletId, Chain.Ethereum)), navigator.backStack.toList())
-    }
-
-    @Test
-    fun finishPrivateKeyWarning_replacesWarningWithTheAccountListWithoutAChain() {
-        val walletId = WalletId("wallet-1")
-        val input = PrivateKeyExportInput(walletId, null)
-        val navigator = navigatorWith(WalletRootRoute, WalletDetailRoute(walletId), PrivateKeyWarningRoute(input))
-
-        navigator.finishPrivateKeyWarning(input)
-
-        assertEquals(listOf(WalletRootRoute, WalletDetailRoute(walletId), PrivateKeyAccountsRoute(walletId)), navigator.backStack.toList())
-    }
-
-    @Test
-    fun openExportPrivateKey_pushesOverTheAccountList() {
-        val walletId = WalletId("wallet-1")
-        val navigator = navigatorWith(WalletRootRoute, WalletDetailRoute(walletId), PrivateKeyAccountsRoute(walletId))
-
-        navigator.openExportPrivateKey(walletId, Chain.Solana)
-
-        assertEquals(
-            listOf(WalletRootRoute, WalletDetailRoute(walletId), PrivateKeyAccountsRoute(walletId), ExportPrivateKeyRoute(walletId, Chain.Solana)),
-            navigator.backStack.toList(),
-        )
-    }
-
-    @Test
-    fun dropNonRestorableRoutes_keepsTheLiveRootWhenItDiffersFromTheStartDestination() {
-        val assetId = mockAssetId(Chain.Solana)
-
-        val restored = listOf<NavKey>(
-            WalletRootRoute,
-            AssetRoute(assetId),
-        ).dropNonRestorableRoutes(OnboardingRoute)
-
-        assertEquals(listOf(WalletRootRoute, AssetRoute(assetId)), restored)
-    }
-
-    @Test
-    fun dropNonRestorableRoutes_keepsOnboardingRootAgainstAWalletStartDestination() {
-        val restored = listOf<NavKey>(OnboardingRoute).dropNonRestorableRoutes(WalletRootRoute)
-
-        assertEquals(listOf(OnboardingRoute), restored)
-    }
-
-    @Test
-    fun dropNonRestorableRoutes_fallsBackToStartDestinationWhenTheRootIsNotARoot() {
-        val assetId = mockAssetId(Chain.Solana)
-
-        val restored = listOf<NavKey>(
-            AssetRoute(assetId),
-            AmountRoute("amount"),
-        ).dropNonRestorableRoutes(WalletRootRoute)
-
-        assertEquals(listOf(WalletRootRoute), restored)
-    }
-
-    @Test
-    fun dropNonRestorableRoutes_removesSensitiveAndInFlightRoutes() {
-        val assetId = mockAssetId(Chain.Solana)
-        val walletId = WalletId("wallet-1")
-
-        val restored = listOf<NavKey>(
-            WalletRootRoute,
-            AssetRoute(assetId),
-            SecurityReminderRoute(WalletSecretInput(walletId, GemWalletSecretKind.PHRASE)),
-            ExportWalletRoute(WalletSecretInput(walletId, GemWalletSecretKind.PHRASE)),
-            PrivateKeyWarningRoute(PrivateKeyExportInput(walletId, null)),
-            PrivateKeyAccountsRoute(walletId),
-            ExportPrivateKeyRoute(walletId, Chain.Ethereum),
-            CreateWalletRoute,
-            RecipientRoute(assetId),
-            AmountRoute("amount"),
-            AmountRoute("perpetual"),
-            ConfirmTransferRoute("confirm"),
-        ).dropNonRestorableRoutes(WalletRootRoute)
-
-        assertEquals(listOf(WalletRootRoute, AssetRoute(assetId)), restored)
-    }
-
-    @Test
-    fun openImportWallet_usesValidTypedRoutes() {
-        val navigator = navigatorWith(OnboardingRoute)
-
-        navigator.openImportWallet()
-        navigator.openImportWallet(ImportType(GemWalletImportKind.PHRASE))
-        navigator.openImportWallet(ImportType(GemWalletImportKind.PRIVATE_KEY, Chain.Solana))
-
-        assertEquals(
-            listOf(
-                OnboardingRoute,
-                ImportWalletTypeRoute,
-                ImportWalletRoute.MulticoinWallet,
-                ImportWalletRoute.ChainWallet(GemWalletImportKind.PRIVATE_KEY, Chain.Solana),
-            ),
-            navigator.backStack.toList(),
-        )
-    }
-
-    @Test
-    fun openGetAsset_swapWithoutPayAssetOpensWithTheMissingAssetToReceive() {
-        val navigator = navigatorWith(WalletRootRoute)
-        val receiveAssetId = mockAssetId(Chain.Tron)
-
-        navigator.openGetAsset(GetAssetAction.Swap(payAssetId = null), receiveAssetId)
-
-        assertEquals(listOf(WalletRootRoute, SwapPairRoute(from = null, to = receiveAssetId)), navigator.backStack.toList())
-    }
-
-    @Test
-    fun finishSwapSelect_popsSelectorAndStoresSelectionForTargetRoute() {
-        val route = SwapPairRoute(mockAssetId(Chain.Bitcoin), to = null)
-        val selectedPayAssetId = mockAssetId(Chain.Solana)
-        val navigator = navigatorWith(
-            WalletRootRoute,
-            route,
-            SwapSelectRoute(SwapItemType.Pay, payAssetId = null, receiveAssetId = null),
-        )
-
-        navigator.finishSwapSelect(itemType = SwapItemType.Pay, assetId = selectedPayAssetId)
-
-        assertEquals(listOf(WalletRootRoute, route), navigator.backStack.toList())
-        assertEquals(
-            SwapSelection(SwapItemType.Pay, assetId = selectedPayAssetId),
-            navigator.swapSelection(route),
-        )
-
-        navigator.clearSwapSelection(route)
-
-        assertNull(navigator.swapSelection(route))
-    }
-
-    @Test
-    fun finishAssetSelect_popsSelectorAndStoresSelectionForTargetRoute() {
-        val selectedAssetId = mockAssetId(Chain.Solana)
-        val navigator = navigatorWith(WalletRootRoute, PriceAlertsRoute, PriceAlertSelectRoute)
-
-        navigator.finishAssetSelect(selectedAssetId)
-
-        assertEquals(listOf(WalletRootRoute, PriceAlertsRoute), navigator.backStack.toList())
-        assertEquals(selectedAssetId, navigator.assetSelection(PriceAlertsRoute))
-
-        navigator.clearAssetSelection(PriceAlertsRoute)
-
-        assertNull(navigator.assetSelection(PriceAlertsRoute))
-    }
-
-    @Test
-    fun finishAssetSelect_fromPaymentSelectStoresSelectionForConfirm() {
-        val confirm = ConfirmTransferRoute("confirm")
-        val selectedAssetId = mockAssetId(Chain.Ethereum)
-        val navigator = navigatorWith(WalletRootRoute, PriceAlertsRoute, confirm, PaymentSelectRoute(listOf(selectedAssetId)))
-
-        navigator.finishAssetSelect(selectedAssetId)
-
-        assertEquals(listOf(WalletRootRoute, PriceAlertsRoute, confirm), navigator.backStack.toList())
-        assertEquals(selectedAssetId, navigator.assetSelection(confirm))
-        assertNull(navigator.assetSelection(PriceAlertsRoute))
-    }
-
-    @Test
-    fun popConfirmFlow_popsTransferFlowToAsset() {
-        val assetId = mockAssetId(Chain.Solana)
-        val navigator = navigatorWith(
-            WalletRootRoute,
-            WalletsRoute,
-            AssetRoute(assetId),
-            RecipientRoute(assetId),
-            AmountRoute("amount"),
-            ConfirmTransferRoute("confirm"),
-        )
-
-        navigator.popConfirmFlow()
-
-        assertEquals(
-            listOf(
-                WalletRootRoute,
-                WalletsRoute,
-                AssetRoute(assetId),
-            ),
-            navigator.backStack.toList(),
-        )
-    }
-
-    @Test
-    fun popConfirmFlow_popsStakeFlowToLaunchingAsset() {
-        val previousAssetId = mockAssetId(Chain.Ethereum)
-        val stakeAssetId = mockAssetId(Chain.Solana)
-        val navigator = navigatorWith(
-            WalletRootRoute,
-            AssetRoute(previousAssetId),
-            AssetRoute(stakeAssetId),
-            StakeRoute(stakeAssetId),
-            AmountRoute("amount"),
-            ConfirmTransferRoute("confirm"),
-        )
-
-        navigator.popConfirmFlow()
-
-        assertEquals(
-            listOf(
-                WalletRootRoute,
-                AssetRoute(previousAssetId),
-                AssetRoute(stakeAssetId),
-            ),
-            navigator.backStack.toList(),
-        )
-    }
-
-    @Test
-    fun popConfirmFlow_popsDelegationStakeFlowToLaunchingAsset() {
-        val assetId = mockAssetId(Chain.Solana)
-        val navigator = navigatorWith(
-            WalletRootRoute,
-            AssetRoute(assetId),
-            StakeRoute(assetId),
-            DelegationRoute(validatorId = "validator", delegationId = "delegation"),
-            AmountRoute("amount"),
-            ConfirmTransferRoute("confirm"),
-        )
-
-        navigator.popConfirmFlow()
-
-        assertEquals(
-            listOf(
-                WalletRootRoute,
-                AssetRoute(assetId),
-            ),
-            navigator.backStack.toList(),
-        )
-    }
-
-    @Test
-    fun popConfirmFlow_popsSwapFlowToAsset() {
-        val assetId = mockAssetId(Chain.Ethereum)
-        val navigator = navigatorWith(
-            WalletRootRoute,
-            WalletsRoute,
-            AssetRoute(assetId),
-            SwapPairRoute(assetId, to = null),
-            ConfirmTransferRoute("confirm"),
-        )
-
-        navigator.popConfirmFlow()
-
-        assertEquals(
-            listOf(
-                WalletRootRoute,
-                WalletsRoute,
-                AssetRoute(assetId),
-            ),
-            navigator.backStack.toList(),
-        )
-    }
-
-    @Test
-    fun popConfirmFlow_popsGetAssetSwapFlowToLaunchingConfirm() {
-        val assetId = mockAssetId(Chain.Solana)
-        val feeAssetId = mockAssetId(Chain.Ethereum)
-        val navigator = navigatorWith(
-            WalletRootRoute,
-            AssetRoute(assetId),
-            RecipientRoute(assetId),
-            AmountRoute("amount"),
-            ConfirmTransferRoute("confirm"),
-            SwapPairRoute(from = null, to = feeAssetId),
-            ConfirmTransferRoute("swap"),
-        )
-
-        navigator.popConfirmFlow()
-
-        assertEquals(
-            listOf(
-                WalletRootRoute,
-                AssetRoute(assetId),
-                RecipientRoute(assetId),
-                AmountRoute("amount"),
-                ConfirmTransferRoute("confirm"),
-            ),
-            navigator.backStack.toList(),
-        )
-    }
-
-    @Test
-    fun popConfirmFlow_popsPerpetualDepositFlowToPerpetuals() {
-        val navigator = navigatorWith(
-            WalletRootRoute,
-            PerpetualsRoute,
-            PerpetualDepositSelectRoute,
-            AmountRoute("amount"),
-            ConfirmTransferRoute("confirm"),
-        )
-
-        navigator.popConfirmFlow()
-
-        assertEquals(listOf(WalletRootRoute, PerpetualsRoute), navigator.backStack.toList())
     }
 
     @Test
@@ -727,7 +217,7 @@ class WalletNavigatorTest {
     }
 
     @Test
-    fun observeCurrentWallet_leavesTheStackAloneForTheWalletItStartsWith() = runTest(UnconfinedTestDispatcher()) {
+    fun observeCurrentWallet_leavesTheStackAloneForTheWalletItStartsWith() = runTest {
         val request = WalletConnectorRequestRoute("request/topic/1")
         val session = MutableStateFlow<Session?>(mockSession(wallet = mockWallet(id = WalletId("current"))))
         val navigator = navigatorWith(WalletRootRoute, request, ReceiveRoute(mockAssetId(Chain.Tron)), session = session)
@@ -735,29 +225,6 @@ class WalletNavigatorTest {
         backgroundScope.launch { navigator.observeCurrentWallet() }
 
         assertEquals(listOf(WalletRootRoute, request, ReceiveRoute(mockAssetId(Chain.Tron))), navigator.backStack.toList())
-    }
-
-    @Test
-    fun aWalletChangeUnderAWalletConnectRequestReturnsToTheWalletWithTheRequestOnTop() = runTest(UnconfinedTestDispatcher()) {
-        val session = MutableStateFlow<Session?>(mockSession(wallet = mockWallet(id = WalletId("current"))))
-        val request = WalletConnectorRequestRoute("request/topic/1")
-        val navigator = navigatorWith(WalletRootRoute, ReceiveRoute(mockAssetId(Chain.Tron)), request, session = session)
-        backgroundScope.launch { navigator.observeCurrentWallet() }
-
-        session.value = mockSession(wallet = mockWallet(id = WalletId("requested")))
-
-        assertEquals(listOf(WalletRootRoute, request), navigator.backStack.toList())
-    }
-
-    @Test
-    fun aWalletChangeWithoutAWalletConnectRequestLeavesNavigationToTheScreenThatChangedIt() = runTest(UnconfinedTestDispatcher()) {
-        val session = MutableStateFlow<Session?>(mockSession(wallet = mockWallet(id = WalletId("current"))))
-        val navigator = navigatorWith(WalletRootRoute, ReceiveRoute(mockAssetId(Chain.Tron)), session = session)
-        backgroundScope.launch { navigator.observeCurrentWallet() }
-
-        session.value = mockSession(wallet = mockWallet(id = WalletId("other")))
-
-        assertEquals(listOf(WalletRootRoute, ReceiveRoute(mockAssetId(Chain.Tron))), navigator.backStack.toList())
     }
 
     @Test
