@@ -55,16 +55,6 @@ fun WalletApp(
     val isTermsAccepted by viewModel.isTermsAccepted.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    val codeStore = remember { com.gemwallet.android.calculator.CalculatorCodeStore(context) }
-    var showBootstrapDialog by remember { mutableStateOf(!codeStore.hasCode()) }
-
-    if (showBootstrapDialog) {
-        com.gemwallet.android.calculator.SetCalculatorCodeDialog(
-            onDismiss = { showBootstrapDialog = false },
-            onSuccess = { showBootstrapDialog = false }
-        )
-    }
-
     val start = startDestination ?: return
     val currentTab = rememberSaveable { mutableStateOf(WalletRoute) }
     val navigator = rememberWalletNavigationState(

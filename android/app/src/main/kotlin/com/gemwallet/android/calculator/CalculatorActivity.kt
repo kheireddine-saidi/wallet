@@ -31,6 +31,15 @@ class CalculatorActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    var showBootstrapDialog by remember { mutableStateOf(!codeStore.hasCode()) }
+
+                    if (showBootstrapDialog) {
+                        SetCalculatorCodeDialog(
+                            onDismiss = { showBootstrapDialog = false },
+                            onSuccess = { showBootstrapDialog = false }
+                        )
+                    }
+
                     CalculatorScreen(
                         codeStore = codeStore,
                         onUnlockSuccess = {
