@@ -10,8 +10,6 @@ import com.gemwallet.android.application.WalletPasswordProtection
 import com.gemwallet.android.application.assets.cases.GetWalletHomeState
 import com.gemwallet.android.application.security.cases.SecurityPreferences
 import com.gemwallet.android.application.session.cases.GetSession
-import com.gemwallet.android.application.update.cases.SkipAppUpdate
-import com.gemwallet.android.application.update.cases.SyncAppUpdate
 import com.gemwallet.android.data.services.gemstone.config.UserConfig
 import com.gemwallet.android.ext.runCatchingCancellable
 import com.gemwallet.android.ext.toGem
@@ -34,8 +32,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import uniffi.gemstone.GemAppStartServiceInterface
-import uniffi.gemstone.GemAppUpdateDestination
-import uniffi.gemstone.GemAppUpdateOffer
 import uniffi.gemstone.GemWalletSessionServiceInterface
 import uniffi.gemstone.UrlAction
 import javax.inject.Inject
@@ -46,8 +42,6 @@ class AppViewModel @Inject constructor(
     private val userConfig: UserConfig,
     private val securityPreferences: SecurityPreferences,
     private val passwordProtection: WalletPasswordProtection,
-    private val syncAppUpdate: SyncAppUpdate,
-    private val skipAppUpdate: SkipAppUpdate,
     private val pendingNavigationCoordinator: PendingNavigationCoordinator,
     private val appStartService: GemAppStartServiceInterface,
     private val walletSessionService: GemWalletSessionServiceInterface,
@@ -90,7 +84,6 @@ class AppViewModel @Inject constructor(
             startDestination.value = getStartDestination()
         }
         viewModelScope.launch(ioDispatcher) {
-            offerStoreUpdate()
             rateAs()
             getSession().collectLatest {
                 onSession(it ?: return@collectLatest)
@@ -105,28 +98,6 @@ class AppViewModel @Inject constructor(
                         Log.e(TAG, "${failure.step} failed: ${failure.message}")
                     }
                 }
-        }
-    }
-
-    fun onSkip() = viewModelScope.launch {
-        val update = state.value.update ?: return@launch
-        runCatchingCancellable { skipAppUpdate.skipAppUpdate(update) }
-            .onSuccess { state.update { it.copy(update = null) } }
-            .onFailure { Log.e(TAG, "skipping update ${update.version} failed", it) }
-    }
-
-    fun onUpdateOpened() {
-        if (state.value.update?.canSkip() == false) {
-            return
-        }
-        state.update { it.copy(update = null) }
-    }
-
-    private suspend fun offerStoreUpdate() {
-        val offer = syncAppUpdate.syncAppUpdate() ?: return
-        when (offer.destination) {
-            is GemAppUpdateDestination.File -> return
-            is GemAppUpdateDestination.Store -> state.update { it.copy(update = offer) }
         }
     }
 
@@ -180,7 +151,7 @@ class AppViewModel @Inject constructor(
     }
 }
 
-data class AppState(val session: Session? = null, val intent: AppIntent = AppIntent.None, val update: GemAppUpdateOffer? = null)
+data class AppState(val session: Session? = null, val intent: AppIntent = AppIntent.None)
 
 enum class AppIntent {
     None,

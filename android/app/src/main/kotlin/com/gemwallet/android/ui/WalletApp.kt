@@ -130,14 +130,6 @@ fun WalletApp(
         }
     }
 
-    state.update?.let { update ->
-        ShowUpdateDialog(
-            update = update,
-            onSkip = viewModel::onSkip,
-            onUpdateOpened = viewModel::onUpdateOpened,
-        )
-    }
-
     val activity = LocalActivity.current
     LaunchedEffect(state.intent, activity) {
         if (state.intent == AppIntent.ShowReview && activity != null) {
@@ -145,80 +137,4 @@ fun WalletApp(
             ReviewManager().open(activity)
         }
     }
-}
-
-@Composable
-private fun ShowUpdateDialog(update: GemAppUpdateOffer, onSkip: () -> Unit, onUpdateOpened: () -> Unit) {
-    val context = LocalContext.current
-    val isPlayStoreInstall = fromGooglePlay(context)
-    val isRequired = !update.canSkip()
-
-    if (isPlayStoreInstall && !isRequired) {
-        return
-    }
-
-    AlertDialog(
-        onDismissRequest = {
-            if (!isRequired) {
-                onSkip()
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                openUpdateDestination(context = context, isPlayStoreInstall = isPlayStoreInstall)
-                onUpdateOpened()
-            }) {
-                Text(text = stringResource(id = GemAppUpdateAction.UPDATE.stringRes()))
-            }
-        },
-        dismissButton = if (isRequired) {
-            null
-        } else {
-            {
-                TextButton(onClick = onSkip) {
-                    Text(text = stringResource(GemAppUpdateAction.SKIP.stringRes()))
-                }
-            }
-        },
-        title = {
-            Text(text = update.title.string(context))
-        },
-        text = {
-            Text(text = update.description.string(context))
-        },
-    )
-}
-
-private fun openUpdateDestination(context: Context, isPlayStoreInstall: Boolean) {
-    val urls = if (isPlayStoreInstall) {
-        listOf(
-            "market://details?id=${context.packageName}",
-            BuildConfig.UPDATE_URL,
-        )
-    } else {
-        listOf(BuildConfig.UPDATE_URL)
-    }
-
-    for (uri in urls) {
-        val launched = runCatching {
-            context.startActivity(
-                Intent(Intent.ACTION_VIEW, uri.toUri()).apply {
-                    addFlags(FLAG_ACTIVITY_NEW_TASK)
-                },
-            )
-        }.isSuccess
-        if (launched) return
-    }
-}
-
-@Suppress("DEPRECATION")
-private fun fromGooglePlay(context: Context): Boolean {
-    val validInstallers = listOf("com.android.vending", "com.google.android.feedback")
-
-    val installer = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        context.packageManager.getInstallSourceInfo(context.packageName).installingPackageName
-    } else {
-        context.packageManager.getInstallerPackageName(context.packageName)
-    }
-    return installer != null && validInstallers.contains(installer)
 }

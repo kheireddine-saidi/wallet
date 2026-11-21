@@ -96,7 +96,7 @@ internal fun AssetScene(
                     AssetHeadItem(header = details.header, onAction = onAction)
                 }
                 val banner = details.banner
-                if (detailsState.showsBanners && banner != null) {
+                if (detailsState.showsBanners && banner != null && banner.destination?.toString() != "Stake") {
                     item {
                         BannerItem(
                             banner = banner,

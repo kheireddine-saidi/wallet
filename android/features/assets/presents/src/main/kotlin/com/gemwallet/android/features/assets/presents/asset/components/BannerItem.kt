@@ -12,6 +12,9 @@ import uniffi.gemstone.GemTransferData
 
 @Composable
 internal fun BannerItem(banner: GemAssetBanner, onStake: () -> Unit, onActivate: (GemTransferData) -> Unit, onOpenPerpetuals: () -> Unit, onClose: (GemBannerKey) -> Unit) {
+    if (banner.destination == GemAssetBannerDestination.Stake) {
+        return
+    }
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
 

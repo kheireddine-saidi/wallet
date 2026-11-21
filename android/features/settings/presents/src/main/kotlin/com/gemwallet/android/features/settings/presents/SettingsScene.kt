@@ -44,7 +44,8 @@ fun SettingsScene(sections: List<GemGroup>, onAction: (SettingsAction) -> Unit, 
                 val visibleRows = mutableListOf<GemListRow>()
                 for (i in 0 until rows.size) {
                     val row = rows[i]
-                    if (row.settingsAction() != null) {
+                    val action = row.settingsAction()
+                    if (action != null && action != SettingsAction.AboutUs) {
                         visibleRows.add(row)
                     }
                 }

@@ -255,7 +255,7 @@ fun MainScreen(navigator: WalletNavigator, currentTab: MutableState<String>, onW
                                         // NOTE: Support and Rewards are disabled.
                                         SettingsAction.Support -> Unit
                                         SettingsAction.Rewards -> Unit
-                                        SettingsAction.AboutUs -> navigator.openAboutUs()
+                                        SettingsAction.AboutUs -> Unit
                                         SettingsAction.Developer -> navigator.openDeveloper()
                                         SettingsAction.CalculatorCode -> showSettingsCodeDialog = true
                                     }
